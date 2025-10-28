@@ -3,10 +3,12 @@ import { Outlet } from 'react-router-dom';
 
 const AuthLayout = () => {
   return (
-    // Dibuat mirip dengan background melengkung dari style.css asli Anda
-    <div className="flex items-center justify-center min-h-screen bg-light">
-      {/* Background SVG ini diambil dari style.css Anda
-        Ini adalah cara Tailwind untuk menambahkan background-image
+    /* Kita hapus 'bg-light' dari div ini.
+      Div ini sekarang murni bertugas untuk menengahkan (center) konten.
+    */
+    <div className="flex items-center justify-center min-h-screen p-4">
+      {/* Background SVG dan warna --light Anda sekarang diterapkan 
+        langsung ke <body> saat layout ini aktif.
       */}
       <style>{`
         body {
@@ -15,8 +17,11 @@ const AuthLayout = () => {
           background-size: cover;
           background-attachment: fixed;
           background-position: center;
+          background-color: #f5f5f5; /* Warna --light Anda */
         }
       `}</style>
+      
+      {/* Outlet akan dirender sempurna di tengah layar */}
       <Outlet />
     </div>
   );

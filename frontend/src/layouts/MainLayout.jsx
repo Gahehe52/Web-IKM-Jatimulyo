@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom'; // [cite: 247]
+import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -9,8 +9,9 @@ const MainLayout = () => {
     <div className="flex flex-col min-h-screen bg-light">
       <Navbar />
       <main className="flex-grow">
-        {/* Halaman (HomePage, LoginPage, dll) akan dirender di sini */}
-        <Outlet /> {/* [cite: 255] */}
+        {/* Konten halaman (Outlet) sekarang akan otomatis full-width */}
+        {/* Halaman seperti HomePage sendiri yang akan mengatur batasnya */}
+        <Outlet />
       </main>
       <Footer />
     </div>
