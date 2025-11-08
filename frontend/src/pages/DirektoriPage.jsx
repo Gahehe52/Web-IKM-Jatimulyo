@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import IkmCard from '../components/IkmCard';
 import SearchFilter from '../components/SearchFilter';
 import { getAllIkms } from '../services/ikmService'; // Import API service
+import SkeletonCard from '../components/SkeletonCard'; // Import Skeleton
+import { AnimatePresence } from 'framer-motion';
 
 const DirektoriPage = () => {
   const [ikms, setIkms] = useState([]);
@@ -47,7 +49,7 @@ const DirektoriPage = () => {
     // Filter berdasarkan kategori
     if (filterCategory) {
       result = result.filter(ikm => 
-        ikm.kategori === filterCategory
+        (ikm.kategori || 'lainnya').toLowerCase() === filterCategory.toLowerCase()
       );
     }
 
@@ -71,19 +73,27 @@ const DirektoriPage = () => {
       />
 
       {/* ikm-list */}
-      {loading && <p className="text-center text-lg">Memuat data IKM...</p>}
       {error && <p className="text-center text-lg text-red-500">{error}</p>}
-      {!loading && !error && (
-        filteredIkms.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredIkms.map(ikm => (
-              <IkmCard key={ikm.id} ikm={ikm} />
-            ))}
-          </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {loading ? (
+          // Tampilkan 6 skeleton card saat loading
+          [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
         ) : (
-          <p className="text-center text-lg text-gray-600">Tidak ada IKM yang ditemukan.</p>
-        )
-      )}
+          <AnimatePresence>
+            {filteredIkms.length > 0 ? (
+              filteredIkms.map(ikm => (
+                <IkmCard key={ikm.id} ikm={ikm} />
+              ))
+            ) : (
+              // Tampil jika tidak loading dan tidak ada hasil
+              <p className="text-center text-lg text-gray-600 col-span-3">
+                Tidak ada IKM yang ditemukan.
+              </p>
+            )}
+          </AnimatePresence>
+        )}
+      </div>
     </div>
   );
 };

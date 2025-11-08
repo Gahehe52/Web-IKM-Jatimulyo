@@ -1,49 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getIkmById, updateIkmProfile } from '../services/ikmService';
+import { getMyIkmProfile, updateIkmProfile } from '../services/ikmService';
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 
 const DashboardIkmPage = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState({ nama_usaha: '', desc: '', link: '' });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+    defaultValues: {
+      nama_usaha: '',
+      desc: '',
+      link: '',
+      img: ''
+    }
+  });
 
-  // TODO: Logika untuk mengambil profile.id
-  // Saat ini, kita tidak tahu 'profile.id' dari user.
-  // Kita perlu endpoint baru (misal GET /api/ikm/my-profile)
-  // Untuk sementara, kita skip loading data.
+  // 1. Fetch existing profile data on load
+  useEffect(() => {
+    const fetchMyProfile = async () => {
+      try {
+        const data = await getMyIkmProfile(); 
+        // 2. Set form values with data from API
+        setValue('nama_usaha', data.nama_usaha);
+        setValue('desc', data.desc);
+        setValue('link', data.link);
+        setValue('img', data.img);
+      } catch (err) {
+        toast.error("Gagal memuat profil.");
+      }
+    };
+    fetchMyProfile();
+  }, [setValue]);
 
-  // useEffect(() => {
-  //   const fetchMyProfile = async () => {
-  //     try {
-  //       // Anda perlu membuat endpoint ini di backend
-  //       const data = await getMyProfile(); 
-  //       setProfile(data);
-  //     } catch (err) {
-  //       setError("Gagal memuat profil.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchMyProfile();
-  // }, []);
-
-  const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  // 3. Handle form submission
+  const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Panggil API update [cite: 702-703]
-      await updateIkmProfile(profile); 
-      setSuccess('Profil berhasil diperbarui!');
+      // Panggil API update
+      await updateIkmProfile(data); 
+      toast.success('Profil berhasil diperbarui!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal memperbarui profil.');
+      toast.error(err.response?.data?.message || 'Gagal memperbarui profil.');
     } finally {
       setLoading(false);
     }
@@ -58,30 +57,25 @@ const DashboardIkmPage = () => {
         Selamat datang, {user?.email}! Di sini Anda dapat mengedit profil IKM Anda.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow-md">
-        {error && <p className="text-red-600 font-medium">{error}</p>}
-        {success && <p className="text-green-600 font-medium">{success}</p>}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-lg shadow-md">
         
         <div>
           <label htmlFor="nama_usaha" className="block text-sm font-medium text-gray-700">Nama Usaha</label>
           <input
+            {...register("nama_usaha", { required: "Nama usaha wajib diisi" })}
             type="text"
-            name="nama_usaha"
             id="nama_usaha"
-            value={profile.nama_usaha}
-            onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary"
+            className={`mt-1 block w-full px-3 py-2 border ${errors.nama_usaha ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary`}
           />
+          {errors.nama_usaha && <p className="text-red-500 text-xs mt-1">{errors.nama_usaha.message}</p>}
         </div>
 
         <div>
           <label htmlFor="desc" className="block text-sm font-medium text-gray-700">Deskripsi</label>
           <textarea
-            name="desc"
+            {...register("desc")}
             id="desc"
             rows="4"
-            value={profile.desc}
-            onChange={handleChange}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary"
           />
         </div>
@@ -89,13 +83,23 @@ const DashboardIkmPage = () => {
         <div>
           <label htmlFor="link" className="block text-sm font-medium text-gray-700">Link (GoFood/Tokopedia, dll)</label>
           <input
+            {...register("link", { pattern: { value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/, message: "URL tidak valid" } })}
             type="url"
-            name="link"
             id="link"
-            value={profile.link}
-            onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary"
+            className={`mt-1 block w-full px-3 py-2 border ${errors.link ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary`}
           />
+          {errors.link && <p className="text-red-500 text-xs mt-1">{errors.link.message}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="img" className="block text-sm font-medium text-gray-700">Link Gambar (URL)</label>
+          <input
+            {...register("img", { pattern: { value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/, message: "URL tidak valid" } })}
+            type="url"
+            id="img"
+            className={`mt-1 block w-full px-3 py-2 border ${errors.img ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-secondary focus:border-secondary`}
+          />
+          {errors.img && <p className="text-red-500 text-xs mt-1">{errors.img.message}</p>}
         </div>
 
         <div>

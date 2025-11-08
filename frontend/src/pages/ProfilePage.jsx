@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getIkmById } from '../services/ikmService';
+import SkeletonProfile from '../components/SkeletonProfile'; // Import Skeleton
 
 const ProfilePage = () => {
-  const { ikmId } = useParams(); // Mendapatkan ID dari URL [cite: 202]
+  const { ikmId } = useParams(); // Mendapatkan ID dari URL
   const [ikm, setIkm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,6 +13,7 @@ const ProfilePage = () => {
     const fetchIkm = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await getIkmById(ikmId);
         setIkm(data);
       } catch (err) {
@@ -25,13 +27,13 @@ const ProfilePage = () => {
     fetchIkm();
   }, [ikmId]);
 
-  if (loading) return <div className="text-center p-10 text-lg">Memuat data IKM...</div>;
+  if (loading) return <SkeletonProfile />;
   if (error) return <div className="text-center p-10 text-lg text-red-500">{error}</div>;
   if (!ikm) return <div className="text-center p-10 text-lg">Data IKM tidak ditemukan.</div>;
 
   return (
     // ikm-detail
-    <div className="py-16 px-5 max-w-5xl mx-auto animate-fadeIn">
+    <div className="py-16 px-5 max-w-5xl mx-auto">
       {/* ikm-detail-content */}
       <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
         <img 

@@ -14,6 +14,13 @@ export const getIkmById = async (id) => {
   return response.data;
 };
 
+// (NEW) Mengambil profil IKM yang sedang login
+export const getMyIkmProfile = async () => {
+  // Ini akan memanggil GET http://localhost:5000/api/ikm/profile/me
+  const response = await api.get('/ikm/profile/me');
+  return response.data;
+};
+
 // Mengupdate profil IKM (untuk dashboard IKM)
 export const updateIkmProfile = async (profileData) => {
   // 'profileData' bisa berisi { nama_usaha, desc, link, dll }

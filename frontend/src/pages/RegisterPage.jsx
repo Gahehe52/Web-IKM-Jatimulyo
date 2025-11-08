@@ -1,39 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/authService';
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 
 const RegisterPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [namaUsaha, setNamaUsaha] = useState('');
-  const [role, setRole] = useState('ikm'); // Default role 'ikm'
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  const onSubmit = async (data) => {
     setLoading(true);
 
-    if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const userData = { email, password, role, nama_usaha: namaUsaha };
+      const userData = { ...data, role: 'ikm' };
       await registerUser(userData);
-      setSuccess('Registrasi sukses! Anda akan diarahkan ke halaman login.');
+      toast.success('Registrasi sukses! Anda akan diarahkan ke halaman login.');
       setTimeout(() => {
         navigate('/login');
-      }, 3000);
+      }, 2000);
       
     } catch (err) {
-      setError(err.response?.data?.message || 'Registrasi gagal. Coba lagi.');
+      toast.error(err.response?.data?.message || 'Registrasi gagal. Coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -51,46 +40,46 @@ const RegisterPage = () => {
           </Link>
         </p>
       </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        {error && <p className="text-red-600 text-sm text-center font-medium">{error}</p>}
-        {success && <p className="text-green-600 text-sm text-center font-medium">{success}</p>}
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         
         <div className="rounded-md shadow-sm space-y-4">
-          <input
-            name="nama_usaha"
-            type="text"
-            required
-            className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
-            placeholder="Nama Usaha (IKM)"
-            value={namaUsaha}
-            onChange={(e) => setNamaUsaha(e.target.value)}
-          />
-          <input
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
-            placeholder="Alamat Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm"
-            placeholder="Password (min. 6 karakter)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <input type="hidden" name="role" value={role} />
+          <div>
+            <input
+              {...register("nama_usaha", { required: "Nama usaha wajib diisi" })}
+              type="text"
+              className={`appearance-none relative block w-full px-3 py-3 border ${errors.nama_usaha ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm`}
+              placeholder="Nama Usaha (IKM)"
+            />
+            {errors.nama_usaha && <p className="text-red-500 text-xs mt-1">{errors.nama_usaha.message}</p>}
+          </div>
+
+          <div>
+            <input
+              {...register("email", { required: "Email wajib diisi", pattern: { value: /^\S+@\S+$/i, message: "Email tidak valid" } })}
+              type="email"
+              autoComplete="email"
+              className={`appearance-none relative block w-full px-3 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm`}
+              placeholder="Alamat Email"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+          </div>
+
+          <div>
+            <input
+              {...register("password", { required: "Password wajib diisi", minLength: { value: 6, message: "Password minimal 6 karakter" } })}
+              type="password"
+              autoComplete="new-password"
+              className={`appearance-none relative block w-full px-3 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary focus:border-secondary sm:text-sm`}
+              placeholder="Password (min. 6 karakter)"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+          </div>
         </div>
+        
         <div>
           <button
             type="submit"
-            disabled={loading || success}
+            disabled={loading}
             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-secondary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition disabled:bg-gray-400"
           >
             {loading ? 'Memproses...' : 'Daftar'}

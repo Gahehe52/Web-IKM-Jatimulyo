@@ -1,33 +1,35 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // [cite: 378]
-import { loginUser } from '../services/authService'; // [cite: 379]
+import { useAuth } from '../context/AuthContext'; //
+import { loginUser } from '../services/authService'; //
+import { useForm } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState(''); // [cite: 381]
-  const [password, setPassword] = useState(''); // [cite: 382]
-  const [error, setError] = useState(''); // [cite: 383]
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth(); // [cite: 384]
-  const navigate = useNavigate(); // [cite: 377]
+  const { login } = useAuth(); //
+  const navigate = useNavigate(); //
+  
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const handleSubmit = async (e) => { // [cite: 387]
-    e.preventDefault();
-    setError('');
+  const onSubmit = async (data) => { //
     setLoading(true);
     try {
-      // 1. Panggil API service [cite: 391]
-      const data = await loginUser(email, password); // [cite: 392]
-      // 2. Jika sukses, simpan ke context [cite: 393]
-      login(data.user, data.token); // [cite: 394]
+      // 1. Panggil API service
+      const response = await loginUser(data.email, data.password); //
+      // 2. Jika sukses, simpan ke context
+      login(response.user, response.token); //
       
-      // 3. Arahkan ke halaman dashboard [cite: 395]
-      if (data.user.role === 'ikm') navigate('/dashboard-ikm'); // [cite: 396]
-      else if (data.user.role === 'admin') navigate('/dashboard-admin'); // [cite: 397-398]
+      toast.success('Login berhasil!');
+
+      // 3. Arahkan ke halaman dashboard
+      if (response.user.role === 'ikm') navigate('/dashboard-ikm'); //
+      else if (response.user.role === 'admin') navigate('/dashboard-admin'); //
       else navigate('/'); // Fallback
       
     } catch (err) {
-      setError(err.response?.data?.message || 'Login gagal. Periksa email dan password.'); // [cite: 402]
+      const message = err.response?.data?.message || 'Login gagal. Periksa email dan password.';
+      toast.error(message); //
     } finally {
       setLoading(false);
     }
@@ -45,38 +47,39 @@ const LoginPage = () => {
           </Link>
         </p>
       </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        {error && <p className="text-red-600 text-sm text-center font-medium">{error}</p>}
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div className="rounded-md shadow-sm -space-y-px">
           <div>
             <label htmlFor="email-address" className="sr-only">Email</label>
             <input
+              {...register("email", { required: "Email wajib diisi" })}
               id="email-address"
-              name="email"
               type="email"
               autoComplete="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm"
+              className={`appearance-none rounded-none relative block w-full px-3 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm`}
               placeholder="Alamat Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
             <label htmlFor="password" className="sr-only">Password</label>
             <input
+              {...register("password", { required: "Password wajib diisi" })}
               id="password"
-              name="password"
               type="password"
               autoComplete="current-password"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm"
+              className={`appearance-none rounded-none relative block w-full px-3 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-secondary focus:border-secondary focus:z-10 sm:text-sm`}
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
         </div>
+
+        {(errors.email || errors.password) && (
+          <div className="text-sm text-red-600">
+            {errors.email && <p>{errors.email.message}</p>}
+            {errors.password && <p>{errors.password.message}</p>}
+          </div>
+        )}
+
         <div>
           <button
             type="submit"
