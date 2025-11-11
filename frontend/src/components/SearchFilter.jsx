@@ -18,6 +18,7 @@ const SearchFilter = ({ onSearchChange, onFilterChange }) => {
         <option value="kerajinan">Kerajinan</option>
         <option value="minuman">Minuman</option>
         <option value="jasa">Jasa</option>
+        <option value="bahan tekstil">Bahan Tekstil</option>
       </select>
     </div>
   );
